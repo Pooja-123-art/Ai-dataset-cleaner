@@ -76,7 +76,22 @@ if uploaded_file is not None:
                     if numeric_cols and cleaned_df[numeric_cols].isnull().sum().sum() > 0:
                         imputer = KNNImputer(n_neighbors=3)
                         cleaned_df[numeric_cols] = imputer.fit_transform(cleaned_df[numeric_cols])
-                    
+                    # Processing numerical parameters with safety check for large data
+                    if numeric_cols and cleaned_df[numeric_cols].isnull().sum().sum() > 0:
+                        if len(cleaned_df) > 50000:
+                          st.info(
+                              "ℹ️ Dataset has more than 50k rows. Using Fast Mean"
+                              " Imputation for stability."
+                          )
+                          for col in numeric_cols:
+                            cleaned_df[col] = cleaned_df[col].fillna(
+                                cleaned_df[col].mean()
+                            )
+                        else:
+                          imputer = KNNImputer(n_neighbors=3)
+                          cleaned_df[numeric_cols] = imputer.fit_transform(
+                              cleaned_df[numeric_cols]
+                          )
                     # Processing text categorical components values mapping updates 
                     for cat_col in categorical_cols:
                         if cleaned_df[cat_col].isnull().sum() > 0:
